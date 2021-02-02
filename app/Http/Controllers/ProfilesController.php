@@ -15,16 +15,16 @@ class ProfilesController extends Controller
         'AGENT' => 3
     ];
 
-    public function data()
+    public function data_insert()
     {
         try {
             echo 'Please Wait It Will Take Few Minutes.';
-
-            $xml = simplexml_load_string(file_get_contents(storage_path() . "/app/public/input.xml"));
+            $xml = simplexml_load_string(file_get_contents(storage_path() . "/app/public/profiles.xml"));
             $availabilitydata = json_decode(json_encode($xml), TRUE);
             $data = $availabilitydata['LIST_G_C6']['G_C6'];
             $pmsReportConfig = PmsReportConfig::first();
-
+            $existedProfileCount = Profile::count();
+            $profileCreate = null;
             foreach ($data as $key => $xmlData) {
                 $where = [
                     'AccommodationId' => $pmsReportConfig['AccommodationId'],
@@ -36,7 +36,8 @@ class ProfilesController extends Controller
 
                 if (empty($existProfile)) {
                     // CREATE PROFILE
-                    $profile = Profile::create([
+                    $profileCreate[] = [
+                        'MasterProfileId' => $existedProfileCount + 1,
                         "GroupId" => $pmsReportConfig['GroupId'],
                         "SourceId" => $pmsReportConfig['SourceId'],
                         "AccommodationId" => $pmsReportConfig['AccommodationId'],
@@ -64,14 +65,7 @@ class ProfilesController extends Controller
                         "StatusId" => 1,
                         "created_at" => is_array($xmlData['C69']) ? null : new Carbon($xmlData['C69']),
                         "updated_at" => is_array($xmlData['C72']) ? null : new Carbon($xmlData['C72']),
-                    ]);
-//              SET PROFILE ID
-                    $profileIdUnique = $profile->id;
-
-                    Profile::find($profileIdUnique)->update([
-                        'MasterProfileId' => $profileIdUnique
-                    ]);
-
+                    ];
                 } else {
                     // Update Profile
                     $existProfile->update([
@@ -99,7 +93,10 @@ class ProfilesController extends Controller
                         "StatusId" => 1,
                     ]);
                 }
+                $existedProfileCount++;
             }
+            if ($profileCreate)
+                Profile::insert($profileCreate);
             return 'Success';
         } catch (\Exception $exception) {
             return $exception->getMessage();
