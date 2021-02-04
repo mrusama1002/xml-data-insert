@@ -2,10 +2,11 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Profile extends Model
+class Stay extends Model
 {
-    protected $table = 'profiles';
+    protected $table = 'stays';
     protected $guarded = ['_token'];
 }

@@ -18,7 +18,6 @@ class ProfilesController extends Controller
     public function data_insert()
     {
         try {
-            echo 'Please Wait It Will Take Few Minutes.';
             $xml = simplexml_load_string(file_get_contents(storage_path() . "/app/public/profiles.xml"));
             $availabilitydata = json_decode(json_encode($xml), TRUE);
             $data = $availabilitydata['LIST_G_C6']['G_C6'];

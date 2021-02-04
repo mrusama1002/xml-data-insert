@@ -17,4 +17,6 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('profiles-update', 'App\Http\Controllers\ProfilesController@data_insert');
+Route::get('profiles', 'App\Http\Controllers\ProfilesController@data_insert');
+Route::get('reservation', 'App\Http\Controllers\ReservationsController@data_insert');
+Route::get('stay', 'App\Http\Controllers\StaysController@data_insert');
