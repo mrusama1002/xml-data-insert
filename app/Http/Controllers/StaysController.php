@@ -2,17 +2,44 @@
 
 namespace App\Http\Controllers;
 
+use App\Classes\mailAttach;
 use App\Models\PmsReportConfig;
 use App\Models\Stay;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 
 class StaysController extends Controller
 {
     public function data_insert()
     {
+        header('Content-Type: text/html; charset=utf-8');
+
+        //Connection Details
+        $hostname = '{imap.gmail.com:993/imap/ssl}INBOX';
+        $username = 'bookingwhizz26@gmail.com'; //change this
+        $password = 'n3gativ3'; //change this
+
+        //Search parameters
+        //See http://uk3.php.net/manual/en/function.imap-search.php for possible keys
+        //SINCE date should be in j F Y format, e.g. 9 August 2013
+        $searchArray = array('SUBJECT'=>'Test', 'SINCE'=>date('j F Y',strtotime('1 month ago')));
+
+        //Save attachment file to
+        $saveToPath = storage_path() . "/app/public/"; //change this
+        //Extract zip files to
+        $unzipDest = storage_path() . "/app/public/"; //change this
+
+        //Create an object
+        $xa = new mailAttach($hostname, $username, $password, false);
+        $xa->get_files($searchArray, $saveToPath);
+        $xa->extract_zip_to($unzipDest);
+
+        $xaA = (array) $xa;
+        $filePath = $xaA["\x00App\Classes\mailAttach\x00path"];
+        $file   = $xaA["\x00App\Classes\mailAttach\x00attachments"][1]['filename'];
+        $path   = $filePath . $file;
+
         try {
-            $xml = simplexml_load_string(file_get_contents(storage_path() . "/app/public/stay.xml"));
+            $xml = simplexml_load_string(file_get_contents($path));
             $availabilitydata = json_decode(json_encode($xml), TRUE);
             $data = $availabilitydata['LIST_G_C6']['G_C6'];
             $pmsReportConfig = PmsReportConfig::first();
