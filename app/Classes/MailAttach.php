@@ -138,11 +138,12 @@ class mailAttach
      *  creates a file from an attachment and stores path for any zip files
      *  @param array $attachment holds all the info for the attachment
      */
-	private function make_file($attachment)
+	public function make_file($attachment)
 	{
-		$filename = $attachment['name'];
-		if(empty($filename)) $filename = $attachment['filename'];
-		if(empty($filename)) $filename = time() . ".dat";
+	    $time = time() . '-';
+		$filename = $time . $attachment['name'];
+		if(empty($filename)) $filename = $time . $attachment['filename'];
+		if(empty($filename)) $filename = $time . ".dat";
 		$loc = $this->path . $filename;
 		if(strtolower(pathinfo($filename, PATHINFO_EXTENSION)) == 'xml') $this->zips[] = $loc;
 		$fp = fopen($loc, "w+");

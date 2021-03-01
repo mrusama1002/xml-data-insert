@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Classes\mailAttach;
+use App\Models\Email;
 use App\Models\PmsReportConfig;
 use App\Models\Profile;
 use App\Traits\getFileFromMail;
@@ -14,15 +15,26 @@ class ProfilesController extends Controller
 
     public $profileType = [
         'GUEST' => 1,
+        'Individual' => 1,
         'COMPANY' => 2,
         'AGENT' => 3
     ];
 
-    public function data_insert()
+    public function check_profiles_xml_type()
+    {
+        $xml = simplexml_load_string(file_get_contents($this->get_data_from_mail()));
+        $availabilitydata = json_decode(json_encode($xml), TRUE);
+        $data = @$availabilitydata['LIST_G_C6']['G_C6'];
+        if ($data) {
+            return $this->data_insert($availabilitydata);
+        } else {
+            return $this->data_insert_profile_type_2($availabilitydata);
+        }
+    }
+
+    public function data_insert($availabilitydata)
     {
         try {
-            $xml = simplexml_load_string(file_get_contents($this->get_data_from_mail()));
-            $availabilitydata = json_decode(json_encode($xml), TRUE);
             $data = $availabilitydata['LIST_G_C6']['G_C6'];
             $pmsReportConfig = PmsReportConfig::first();
             $existedProfileCount = Profile::count();
@@ -93,6 +105,72 @@ class ProfilesController extends Controller
                         'Country' => is_array($xmlData['C63']) ? $existProfile->Country : $xmlData['C63'],
                         'PostalCode' => is_array($xmlData['C66']) ? $existProfile->PostalCode : $xmlData['C66'],
                         "StatusId" => 1,
+                    ]);
+                }
+                $existedProfileCount++;
+            }
+            if ($profileCreate)
+                Profile::insert($profileCreate);
+            return 'Success';
+        } catch (\Exception $exception) {
+            return $exception->getMessage();
+        }
+    }
+
+    public function data_insert_profile_type_2($availabilitydata)
+    {
+        try {
+            $data = $availabilitydata['profile'];
+            $pmsReportEmail = Email::first();
+            $existedProfileCount = Profile::count();
+            $profileCreate = null;
+            foreach ($data as $key => $xmlData) {
+                $where = [
+                    'AccommodationId' => $pmsReportEmail['AccommodationId'],
+                    'SourceId' => $pmsReportEmail['SourceId'],
+                    'GroupId' => $pmsReportEmail['GroupId'],
+                    'ProfileId' => $xmlData['profileid']
+                ];
+                $existProfile = Profile::where($where)->first();
+
+                if (empty($existProfile)) {
+                    // CREATE PROFILE
+                    $profileCreate[] = [
+                        'MasterProfileId' => $existedProfileCount + 1,
+                        "GroupId" => $pmsReportEmail['GroupId'],
+                        "SourceId" => $pmsReportEmail['SourceId'],
+                        "AccommodationId" => $pmsReportEmail['AccommodationId'],
+                        "ProfileId" => is_array($xmlData['profileid']) ? null : $xmlData['profileid'],
+                        "ProfileTypeId" => is_array($xmlData['profiletype']) ? null : $this->profileType[$xmlData['profiletype']],
+                        "Title" => is_array($xmlData['title']) ? null : $xmlData['title'],
+                        "FirstName" => is_array($xmlData['firstname']) ? null : $xmlData['firstname'],
+                        "LastName" => is_array($xmlData['lastname']) ? null : $xmlData['lastname'],
+                        "Gender" => is_array($xmlData['gender']) ? null : $xmlData['gender'],
+                        "Language" => is_array($xmlData['language']) ? null : $xmlData['language'],
+                        "Nationality" => is_array($xmlData['nationality']) ? null : $xmlData['nationality'],
+                        'Email' => is_array($xmlData['email']) ? null : $xmlData['email'],
+                        'PhoneNumber' => is_array($xmlData['telephone']) ? null : $xmlData['telephone'],
+                        'Country' => is_array($xmlData['country']) ? null : $xmlData['country'],
+                        "StatusId" => 1,
+                        "created_at" => is_array($xmlData['createdate']) ? null : new Carbon(str_replace("/", "-", $xmlData['createdate'])),
+                        "updated_at" => is_array($xmlData['updatedate']) ? null : new Carbon(str_replace("/", "-", $xmlData['updatedate']))
+                    ];
+                } else {
+                    // Update Profile
+                    $existProfile->update([
+                        "ProfileId" => is_array($xmlData['profileid']) ? $existProfile->ProfileId : $xmlData['profileid'],
+                        "ProfileTypeId" => is_array($xmlData['profiletype']) ? $existProfile->ProfileTypeId : $this->profileType[$xmlData['profiletype']],
+                        "Title" => is_array($xmlData['title']) ? $existProfile->Title : $xmlData['title'],
+                        "FirstName" => is_array($xmlData['firstname']) ? $existProfile->FirstName : $xmlData['firstname'],
+                        "LastName" => is_array($xmlData['lastname']) ? $existProfile->LastName : $xmlData['lastname'],
+                        "Gender" => is_array($xmlData['gender']) ? $existProfile->Gender : $xmlData['gender'],
+                        "Language" => is_array($xmlData['language']) ? $existProfile->Language : $xmlData['language'],
+                        "Nationality" => is_array($xmlData['nationality']) ? $existProfile->Nationality : $xmlData['nationality'],
+                        'Email' => is_array($xmlData['email']) ? $existProfile->Email : $xmlData['email'],
+                        'PhoneNumber' => is_array($xmlData['telephone']) ? $existProfile->PhoneNumber : $xmlData['telephone'],
+                        'Country' => is_array($xmlData['country']) ? $existProfile->Country : $xmlData['country'],
+                        "StatusId" => 1,
+                        "updated_at" => is_array($xmlData['updatedate']) ? null : new Carbon(str_replace("/", "-", $xmlData['updatedate']))
                     ]);
                 }
                 $existedProfileCount++;
