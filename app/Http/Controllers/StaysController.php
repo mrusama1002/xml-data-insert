@@ -5,13 +5,13 @@ namespace App\Http\Controllers;
 use App\Classes\mailAttach;
 use App\Models\PmsReportConfig;
 use App\Models\Stay;
-use App\Traits\getFileFromMail;
+use App\Traits\mailSettings;
 use Carbon\Carbon;
 
 class StaysController extends Controller
 {
-    use getFileFromMail;
-    
+    use mailSettings;
+
     public function data_insert()
     {
         try {

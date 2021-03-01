@@ -138,7 +138,7 @@ class mailAttach
      *  creates a file from an attachment and stores path for any zip files
      *  @param array $attachment holds all the info for the attachment
      */
-	public function make_file($attachment)
+	private function make_file($attachment)
 	{
 	    $time = time() . '-';
 		$filename = $time . $attachment['name'];

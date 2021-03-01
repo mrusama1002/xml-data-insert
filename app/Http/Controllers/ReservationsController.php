@@ -5,12 +5,12 @@ namespace App\Http\Controllers;
 use App\Classes\mailAttach;
 use App\Models\PmsReportConfig;
 use App\Models\Reservation;
-use App\Traits\getFileFromMail;
+use App\Traits\mailSettings;
 use Carbon\Carbon;
 
 class ReservationsController extends Controller
 {
-    use getFileFromMail;
+    use mailSettings;
 
     public function data_insert()
     {

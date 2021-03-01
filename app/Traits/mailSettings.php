@@ -3,9 +3,8 @@
 namespace App\Traits;
 
 use App\Classes\mailAttach;
-use Illuminate\Support\Facades\Mail;
 
-trait getFileFromMail
+trait mailSettings
 {
     public function get_data_from_mail()
     {

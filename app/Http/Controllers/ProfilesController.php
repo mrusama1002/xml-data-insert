@@ -6,12 +6,12 @@ use App\Classes\mailAttach;
 use App\Models\Email;
 use App\Models\PmsReportConfig;
 use App\Models\Profile;
-use App\Traits\getFileFromMail;
+use App\Traits\mailSettings;
 use Carbon\Carbon;
 
 class ProfilesController extends Controller
 {
-    use getFileFromMail;
+    use mailSettings;
 
     public $profileType = [
         'GUEST' => 1,
