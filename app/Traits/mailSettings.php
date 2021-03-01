@@ -26,13 +26,16 @@ trait mailSettings
         $unzipDest = storage_path() . "/app/public/"; //change this
 
         //Create an object
-        $xa = new mailAttach($hostname, $username, $password, false);
-        $xa->get_files($searchArray, $saveToPath);
-
-        $xa->extract_zip_to($unzipDest);
-        $xaA = (array)$xa;
-        $file = $xaA["\x00App\Classes\mailAttach\x00zips"][0];
-        return $file;
+        $mail = new mailAttach($hostname, $username, $password, false);
+        $mail->get_files($searchArray, $saveToPath);
+        $check = (array)$mail;
+        if ($check["\x00App\Classes\mailAttach\x00emailNumber"]) {
+            $mail->extract_zip_to($unzipDest);
+            $mailAttached = (array)$mail;
+            $file = $mailAttached["\x00App\Classes\mailAttach\x00zips"][0];
+            return $file;
+        }
+        return false;
     }
 
     public function get_data_from_yandex_mail()

@@ -22,7 +22,11 @@ class ProfilesController extends Controller
 
     public function check_profiles_xml_type()
     {
-        $xml = simplexml_load_string(file_get_contents($this->get_data_from_mail()));
+        $get_data = $this->get_data_from_mail();
+        if (!$get_data) {
+            return 'No Data Found!';
+        }
+        $xml = simplexml_load_string(file_get_contents($get_data));
         $availabilitydata = json_decode(json_encode($xml), TRUE);
         $data = @$availabilitydata['LIST_G_C6']['G_C6'];
         if ($data) {

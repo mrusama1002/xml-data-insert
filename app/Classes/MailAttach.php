@@ -72,7 +72,7 @@ class mailAttach
 
 		$searchString = $this->create_search_string($searchArray);
 
-		if($emails = imap_search($this->imap, $searchString))
+		if($emails = imap_search($this->imap, 'Unseen'))
 		{
 		    $this->emailNumber = end($emails);
 
