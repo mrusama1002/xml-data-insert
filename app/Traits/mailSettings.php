@@ -43,8 +43,8 @@ trait mailSettings
         header('Content-Type: text/html; charset=utf-8');
 
         //Connection Details
-        $hostname = '{imap.yandex.ru:993/imap/ssl}INBOX';
-        $username = 'pmsreports@ybookingwhizz.co'; //change this
+        $hostname = 'imap.yandex.com:993';
+        $username = 'pmsreports@bookingwhizz.co'; //change this
         $password = 'Beta2020!'; //change this
 
         //Search parameters
