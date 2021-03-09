@@ -1,22 +1,28 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Traits;
 
-use App\Classes\mailAttach;
 use App\Models\PmsReportConfig;
 use App\Models\Stay;
-use App\Traits\mailSettings;
 use Carbon\Carbon;
 
-class StaysController extends Controller
+trait stayData
 {
-    use mailSettings;
+    public function check_stay_xml_type($get_file_path)
+    {
+        $xml = simplexml_load_string(file_get_contents($get_file_path));
+        $availabilitydata = json_decode(json_encode($xml), TRUE);
+        $data = @$availabilitydata['LIST_G_C6']['G_C6'];
+        if ($data) {
+            return $this->stay_data_insert_in_RHOTEL($availabilitydata);
+        } else {
+            return $this->stay_data_insert_in_ewaa_hotel($availabilitydata);
+        }
+    }
 
-    public function data_insert()
+    public function stay_data_insert_in_RHOTEL($availabilitydata)
     {
         try {
-            $xml = simplexml_load_string(file_get_contents($this->get_data_from_mail()));
-            $availabilitydata = json_decode(json_encode($xml), TRUE);
             $data = $availabilitydata['LIST_G_C6']['G_C6'];
             $pmsReportConfig = PmsReportConfig::first();
             $stayCreate = null;
@@ -88,4 +94,6 @@ class StaysController extends Controller
             return $exception->getMessage();
         }
     }
+
+    public function stay_data_insert_in_ewaa_hotel($availabilitydata){}
 }

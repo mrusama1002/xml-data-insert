@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Traits;
 
 use App\Models\City;
 use App\Models\Country;
@@ -12,7 +12,7 @@ use App\Models\ProfileContact;
 use App\Models\ProfileEmail;
 use Carbon\Carbon;
 
-class ProfilesController extends Controller
+trait profileData
 {
     public $profileType = [
         'GUEST' => 1,
@@ -21,9 +21,9 @@ class ProfilesController extends Controller
         'AGENT' => 3
     ];
 
-    public function index()
+    public function check_profiles_xml_type($get_file_path)
     {
-        $xml = simplexml_load_string(file_get_contents(storage_path() . "/app/public/profiles.xml"));
+        $xml = simplexml_load_string(file_get_contents($get_file_path));
         $availabilitydata = json_decode(json_encode($xml), TRUE);
         $data = @$availabilitydata['LIST_G_C6']['G_C6'];
         if ($data) {
