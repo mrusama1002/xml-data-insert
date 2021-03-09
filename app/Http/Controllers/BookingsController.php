@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Email;
 use App\Models\PmsReportConfig;
+use App\Models\Profile;
 use App\Models\Reservation;
 use Carbon\Carbon;
 use Illuminate\Http\Request;

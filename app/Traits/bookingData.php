@@ -5,6 +5,7 @@ namespace App\Traits;
 use App\Models\Booking;
 use App\Models\Email;
 use App\Models\PmsReportConfig;
+use App\Models\Profile;
 use App\Models\Reservation;
 use Carbon\Carbon;
 
@@ -126,16 +127,29 @@ trait bookingData
             $data = $availabilitydata['booking'];
             $pmsReportEmail = Email::first();
             $reservationCreate = null;
+
+
+
             foreach ($data as $key => $xmlData) {
+                $whereProfile = [
+                    'AccommodationId' => $pmsReportEmail['AccommodationId'],
+                    'SourceId' => $pmsReportEmail['SourceId'],
+                    'GroupId' => $pmsReportEmail['GroupId'],
+                    'Profile_PMSId' => $xmlData['profileid'],
+                ];
+                $profileId = Profile::select('ProfileId')->where($whereProfile)->first();
+
                 $where = [
                     'AccommodationId' => $pmsReportEmail['AccommodationId'],
                     'SourceId' => $pmsReportEmail['SourceId'],
-                    'PmsBookingId' => $xmlData['resno']
+                    'PmsBookingId' => $xmlData['resno'],
                 ];
+
                 $existReservation = Booking::where($where)->first();
 
                 if (empty($existReservation)) {
                     $reservationCreate[] = [
+                        "ProfileId" => @$profileId->ProfileId,
                         "SourceId" => $pmsReportEmail['SourceId'],
                         "AccommodationId" => $pmsReportEmail['AccommodationId'],
                         "Reference" => is_array($xmlData['refid']) ? null : $xmlData['refid'],
@@ -146,7 +160,7 @@ trait bookingData
                         "CheckOutTime" => is_array($xmlData['deptime']) ? null : @$xmlData['deptime'],
                         "CancellationComment" => is_array($xmlData['cancelreason']) ? null : $xmlData['cancelreason'],
                         "CancellationNumber" => is_array($xmlData['cancelno']) ? null : $xmlData['cancelno'],
-                        "CancelledAt" => is_array($xmlData['canceldate']) ? null : $xmlData['canceldate'],
+                        "CancelledAt" => is_array($xmlData['canceldate']) ? null : new Carbon(date('d-m-Y', strtotime($xmlData['canceldate']))),
                         "CompanyIds" => is_array($xmlData['company']) ? null : $xmlData['company'],
                         "BookingCreateDate" => is_array($xmlData['createdate']) ? null : new Carbon(str_replace("/", "-", $xmlData['createdate'])),
                         "BookingLastModified" => is_array($xmlData['updatedate']) ? null : new Carbon(str_replace("/", "-", $xmlData['updatedate'])),
