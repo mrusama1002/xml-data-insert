@@ -4,9 +4,7 @@ namespace App\Traits;
 
 use App\Models\Booking;
 use App\Models\Email;
-use App\Models\PmsReportConfig;
 use App\Models\Profile;
-use App\Models\Reservation;
 use Carbon\Carbon;
 
 trait bookingData
@@ -226,7 +224,7 @@ trait bookingData
             }
             if ($reservationCreate)
                 Booking::insert($reservationCreate);
-            return 'Success';
+            print_r('Success');
         } catch (\Exception $exception) {
             return $exception->getMessage();
         }

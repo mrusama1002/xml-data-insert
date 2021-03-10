@@ -5,7 +5,6 @@ namespace App\Traits;
 use App\Models\City;
 use App\Models\Country;
 use App\Models\Email;
-use App\Models\PmsReportConfig;
 use App\Models\Profile;
 use App\Models\ProfileAddress;
 use App\Models\ProfileContact;
@@ -147,7 +146,7 @@ trait profileData
             }
             return 'Success';
         } catch (\Exception $exception) {
-            return $exception->getMessage();
+            return response($exception->getMessage());
         }
     }
 
@@ -264,7 +263,7 @@ trait profileData
             }
             return 'Success';
         } catch (\Exception $exception) {
-            return $exception->getMessage();
+            return response($exception->getMessage());
         }
     }
 }

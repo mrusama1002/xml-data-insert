@@ -5,7 +5,6 @@ namespace App\Traits;
 use App\Models\Booking;
 use App\Models\Email;
 use App\Models\Profile;
-use App\Models\Stay;
 use Carbon\Carbon;
 
 trait stayData
@@ -51,7 +50,7 @@ trait stayData
                     'GroupId' => $pmsReportConfig['GroupId'],
                     'ConfNumber' => $xmlData['C48']
                 ];
-                $existStay = Stay::where($where)->first();
+                $existStay = Booking::where($where)->first();
                 if (empty($existStay)) {
                     // CREATE STAY
                     $stayCreate[] = [
@@ -105,10 +104,10 @@ trait stayData
                 }
             }
             if ($stayCreate)
-                Stay::insert($stayCreate);
+                Booking::insert($stayCreate);
             return 'Success';
         } catch (\Exception $exception) {
-            return $exception->getMessage();
+            return response($exception->getMessage());
         }
     }
 
@@ -182,7 +181,7 @@ trait stayData
                 Booking::insert($reservationCreate);
             return 'Success';
         } catch (\Exception $exception) {
-            return $exception->getMessage();
+            return response($exception->getMessage());
         }
     }
 }
