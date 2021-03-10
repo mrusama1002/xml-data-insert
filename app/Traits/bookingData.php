@@ -158,7 +158,8 @@ trait bookingData
                     'SourceId' => $pmsReportEmail['SourceId'],
                     'PmsBookingId' => $xmlData['resno'],
                 ];
-
+                $bookingCreateDate = $xmlData['createdate'] . ' ' . $xmlData['createtime'];
+                $bookingLastModified = $xmlData['updatedate'] . ' ' . $xmlData['updatetime'];
                 $existReservation = Booking::where($where)->first();
 
                 if (empty($existReservation)) {
@@ -176,8 +177,8 @@ trait bookingData
                         "CancellationNumber" => is_array($xmlData['cancelno']) ? null : $xmlData['cancelno'],
                         "CancelledAt" => is_array($xmlData['canceldate']) ? null : new Carbon(date('d-m-Y', strtotime($xmlData['canceldate']))),
                         "CompanyIds" => is_array($xmlData['company']) ? null : $xmlData['company'],
-                        "BookingCreateDate" => is_array($xmlData['createdate']) ? null : new Carbon(str_replace("/", "-", $xmlData['createdate'])),
-                        "BookingLastModified" => is_array($xmlData['updatedate']) ? null : new Carbon(str_replace("/", "-", $xmlData['updatedate'])),
+                        "BookingCreateDate" => is_array($xmlData['createdate']) ? null : new Carbon($bookingCreateDate),
+                        "BookingLastModified" => is_array($xmlData['updatedate']) ? null : new Carbon($bookingLastModified),
                         "CurrencyCode" => is_array($xmlData['curreny']) ? null : $xmlData['curreny'],
                         "Status" => is_array($xmlData['resstatus']) ? null : $this->bookingStatus[$xmlData['resstatus']],
                         "GuestIds" => is_array($xmlData['profileid']) ? null : $xmlData['profileid'],
@@ -206,8 +207,8 @@ trait bookingData
                         "CancellationNumber" => is_array($xmlData['cancelno']) ? $existReservation->CancellationNumber : $xmlData['cancelno'],
                         "CancelledAt" => is_array($xmlData['canceldate']) ? $existReservation->CancelledAt : $xmlData['canceldate'],
                         "CompanyIds" => is_array($xmlData['company']) ? $existReservation->CompanyIds : $xmlData['company'],
-                        "BookingCreateDate" => is_array($xmlData['createdate']) ? $existReservation->InsertDate : new Carbon(str_replace("/", "-", $xmlData['createdate'])),
-                        "BookingLastModified" => is_array($xmlData['updatedate']) ? $existReservation->UpdateDate : new Carbon(str_replace("/", "-", $xmlData['updatedate'])),
+                        "BookingCreateDate" => is_array($xmlData['createdate']) ? $existReservation->BookingCreateDate : new Carbon($bookingCreateDate),
+                        "BookingLastModified" => is_array($xmlData['updatedate']) ? $existReservation->BookingLastModified : new Carbon($bookingLastModified),
                         "CurrencyCode" => is_array($xmlData['curreny']) ? $existReservation->CurrencyCode : $xmlData['curreny'],
                         "Status" => is_array($xmlData['resstatus']) ? $existReservation->Status : $this->bookingStatus[$xmlData['resstatus']],
                         "GuestIds" => is_array($xmlData['profileid']) ? $existReservation->GuestIds : $xmlData['profileid'],

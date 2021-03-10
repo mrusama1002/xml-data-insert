@@ -166,6 +166,10 @@ trait profileData
                     'Profile_PMSId' => $xmlData['profileid']
                 ];
                 $existProfile = Profile::where($where)->first();
+
+                $profileCreateDate = $xmlData['createdate'] . ' ' . $xmlData['createtime'];
+                $profileLastModified = $xmlData['updatedate'] . ' ' . $xmlData['updatetime'];
+
                 if (empty($existProfile)) {
                     // CREATE PROFILE
                     $profile = Profile::create([
@@ -183,35 +187,37 @@ trait profileData
                         "LanguageCode" => is_array(@$xmlData['language']) ? null : $xmlData['language'],
                         "Nationality" => is_array(@$xmlData['nationality']) ? null : $xmlData['nationality'],
                         "StatusId" => 1,
-                        "CreateDate" => is_array(@$xmlData['createdate']) ? null : new Carbon(str_replace("/", "-", $xmlData['createdate'])),
-                        "LastModified" => is_array(@$xmlData['updatedate']) ? null : new Carbon(str_replace("/", "-", $xmlData['updatedate']))
+                        "ProfileCreateDate" => is_array(@$xmlData['createdate']) ? null : new Carbon($profileCreateDate),
+                        "ProfileLastModified" => is_array(@$xmlData['updatedate']) ? null : new Carbon($profileLastModified),
+                        "CreateDate" => Carbon::now(),
+                        "LastModified" => Carbon::now()
                     ]);
 
                     $profileIdUnique = $profile->ProfileId;
 
                     if (!empty($xmlData['telephone'])) {
-                        ProfileContact::create([
+                        $profileContactArray = [
                             'ProfileId' => $profileIdUnique,
                             'PhoneNumber' => is_array(@$xmlData['telephone']) ? null : $xmlData['telephone'],
                             'SourceId' => 13,
-                            'CreateDate' => is_array(@$xmlData['createdate']) ? null : new Carbon(str_replace("/", "-", $xmlData['createdate'])),
-                            'LastModified' => is_array(@$xmlData['updatedate']) ? null : new Carbon(str_replace("/", "-", $xmlData['updatedate']))
-                        ]);
+                            'CreateDate' => Carbon::now(),
+                            'LastModified' => Carbon::now()
+                        ];
                     }
                     if (!empty($xmlData['email'])) {
-                        ProfileEmail::create([
+                        $profileEmailArray = [
                             'ProfileId' => $profileIdUnique,
                             'Email' => is_array(@$xmlData['email']) ? null : strtolower($xmlData['email']),
                             'SourceId' => 13,
-                            'CreateDate' => is_array(@$xmlData['createdate']) ? null : new Carbon(str_replace("/", "-", $xmlData['createdate'])),
-                            'LastModified' => is_array(@$xmlData['updatedate']) ? null : new Carbon(str_replace("/", "-", $xmlData['updatedate']))
-                        ]);
+                            'CreateDate' => Carbon::now(),
+                            'LastModified' => Carbon::now()
+                        ];
                     }
                     $country = Country::where('CountryCodeISO2', $xmlData['country'])
                         ->orWhere('CountryName', $xmlData['country'])
                         ->orWhere('CountryCode', $xmlData['country'])->first();
 
-                    ProfileAddress::create([
+                    $profileAddressArray = [
                         'ProfileId' => $profileIdUnique,
                         'CountryId' => is_array(@$country['CountryId']) ? null : @$country['CountryId'],
                         'CountryName' => is_array(@$country['CountryName']) ? null : @$country['CountryName'],
@@ -219,9 +225,10 @@ trait profileData
                         'CityName' => is_array(@$xmlData['city']) ? null : @$xmlData['city'],
                         'ZipCode' => is_array(@$xmlData['ZipCode']) ? null : @$xmlData['ZipCode'],
                         'SourceId' => 13,
-                        'CreateDate' => is_array(@$xmlData['createdate']) ? null : new Carbon(str_replace("/", "-", @$xmlData['createdate'])),
-                        'LastModified' => is_array(@$xmlData['updatedate']) ? null : new Carbon(str_replace("/", "-", @$xmlData['updatedate']))
-                    ]);
+                        'CreateDate' => Carbon::now(),
+                        'LastModified' => Carbon::now()
+                    ];
+
                     Profile::find($profileIdUnique)->update([
                         'MasterProfileId' => $profileIdUnique
                     ]);
@@ -241,9 +248,18 @@ trait profileData
                         'PhoneNumber' => is_array(@$xmlData['telephone']) ? $existProfile->PhoneNumber : $xmlData['telephone'],
                         'Country' => is_array(@$xmlData['country']) ? $existProfile->Country : $xmlData['country'],
                         "StatusId" => 1,
-                        "updated_at" => is_array(@$xmlData['updatedate']) ? null : new Carbon(str_replace("/", "-", $xmlData['updatedate']))
+                        "ProfileCreateDate" => is_array(@$xmlData['createdate']) ? $existProfile->ProfileCreateDate : new Carbon($profileCreateDate),
+                        "ProfileLastModified" => is_array(@$xmlData['updatedate']) ? $existProfile->ProfileLastModified : new Carbon($profileLastModified),
+                        "updated_at" => Carbon::now(),
                     ]);
                 }
+                if (!empty($xmlData['telephone'])) {
+                    ProfileContact::insert($profileContactArray);
+                }
+                if (!empty($xmlData['email'])) {
+                    ProfileEmail::insert($profileEmailArray);
+                }
+                ProfileAddress::insert($profileAddressArray);
                 $existedProfileCount++;
             }
             return 'Success';
