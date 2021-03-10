@@ -12,6 +12,23 @@ use Illuminate\Http\Request;
 
 class BookingsController extends Controller
 {
+
+    public $bookingStatus = [
+        'Confirmed' => 'EXPECTED',
+        'Expected Today' => 'EXPECTED',
+        'Checked in today' => 'CHECKED_IN',
+        'In house' => 'CHECKED_IN',
+        'Exp dep today' => 'CHECKED_IN',
+        'Departed today' => 'CHECKED_OUT',
+        'Cancelled' => 'CANCELLED',
+        'Noshow' => 'NO_SHOW',
+        'TRANSFERRED' => 'TRANSFERRED',
+        'OTHER' => 'OTHER',
+        'Modified' => 'Modified',
+        'Pending' => 'Pending'
+    ];
+
+
     public function index()
     {
         $xml = simplexml_load_string(file_get_contents(storage_path() . "/app/public/Booking.xml"));
@@ -133,88 +150,88 @@ class BookingsController extends Controller
             $data = $availabilitydata['booking'];
             $pmsReportEmail = Email::first();
             $reservationCreate = null;
+
             foreach ($data as $key => $xmlData) {
-                $where = [
+                $whereProfile = [
                     'AccommodationId' => $pmsReportEmail['AccommodationId'],
                     'SourceId' => $pmsReportEmail['SourceId'],
                     'GroupId' => $pmsReportEmail['GroupId'],
-                    'ConfNumber' => $xmlData['resno']
+                    'Profile_PMSId' => $xmlData['profileid'],
                 ];
+                $profileId = Profile::select('ProfileId')->where($whereProfile)->first();
+
+                $where = [
+                    'AccommodationId' => $pmsReportEmail['AccommodationId'],
+                    'SourceId' => $pmsReportEmail['SourceId'],
+                    'PmsBookingId' => $xmlData['resno'],
+                ];
+
                 $existReservation = Booking::where($where)->first();
 
                 if (empty($existReservation)) {
                     $reservationCreate[] = [
-                        "GroupId" => $pmsReportEmail['GroupId'],
+                        "ProfileId" => @$profileId->ProfileId,
                         "SourceId" => $pmsReportEmail['SourceId'],
                         "AccommodationId" => $pmsReportEmail['AccommodationId'],
-                        "Property" => $pmsReportEmail['AccommodationId'],
                         "Reference" => is_array($xmlData['refid']) ? null : $xmlData['refid'],
                         "PmsBookingId" => is_array($xmlData['resno']) ? null : $xmlData['resno'],
-                        "ArrivalDate" => is_array($xmlData['arrdate']) ? null : $xmlData['arrdate'],
-                        "ArrivalTime" => is_array($xmlData['arrtime']) ? null : $xmlData['arrtime'],
-                        "DepartureDate" => is_array($xmlData['depdate']) ? null : $xmlData['depdate'],
-                        "DepartureTime" => is_array($xmlData['deptime']) ? null : $xmlData['deptime'],
-                        "CancellationReason" => is_array($xmlData['cancelreason']) ? null : $xmlData['cancelreason'],
-                        "CancellationNo" => is_array($xmlData['cancelno']) ? null : $xmlData['cancelno'],
-                        "CancellationDate" => is_array($xmlData['canceldate']) ? null : $xmlData['canceldate'],
-                        "CompanyName" => is_array($xmlData['company']) ? null : $xmlData['company'],
-                        "InsertUser" => is_array($xmlData['guestname']) ? null : $xmlData['guestname'],
-                        "BookingCreateDate" => is_array($xmlData['createdate']) ? null : $xmlData['createdate'],
-                        "BookingLastModified" => is_array($xmlData['updatedate']) ? null : $xmlData['updatedate'],
+                        "CheckInDate" => is_array($xmlData['arrdate']) ? null : new Carbon(date('d-m-Y', strtotime($xmlData['arrdate']))),
+                        "CheckInTime" => is_array($xmlData['arrtime']) ? null : @$xmlData['arrtime'],
+                        "CheckOutDate" => is_array($xmlData['depdate']) ? null : new Carbon(date('d-m-Y', strtotime($xmlData['depdate']))),
+                        "CheckOutTime" => is_array($xmlData['deptime']) ? null : @$xmlData['deptime'],
+                        "CancellationComment" => is_array($xmlData['cancelreason']) ? null : $xmlData['cancelreason'],
+                        "CancellationNumber" => is_array($xmlData['cancelno']) ? null : $xmlData['cancelno'],
+                        "CancelledAt" => is_array($xmlData['canceldate']) ? null : new Carbon(date('d-m-Y', strtotime($xmlData['canceldate']))),
+                        "CompanyIds" => is_array($xmlData['company']) ? null : $xmlData['company'],
+                        "BookingCreateDate" => is_array($xmlData['createdate']) ? null : new Carbon(str_replace("/", "-", $xmlData['createdate'])),
+                        "BookingLastModified" => is_array($xmlData['updatedate']) ? null : new Carbon(str_replace("/", "-", $xmlData['updatedate'])),
                         "CurrencyCode" => is_array($xmlData['curreny']) ? null : $xmlData['curreny'],
-                        "ResvStatus" => is_array($xmlData['resstatus']) ? null : $xmlData['resstatus'],
-                        "GuestNameID" => is_array($xmlData['profileid']) ? null : $xmlData['profileid'],
-                        "LastName" => is_array($xmlData['guestname']) ? null : $xmlData['guestname'],
+                        "Status" => is_array($xmlData['resstatus']) ? null : $this->bookingStatus[$xmlData['resstatus']],
+                        "GuestIds" => is_array($xmlData['profileid']) ? null : $xmlData['profileid'],
                         "MarketCode" => is_array($xmlData['marketcode']) ? null : $xmlData['marketcode'],
-                        "PaymentMethod" => is_array($xmlData['paymentmethod']) ? null : $xmlData['paymentmethod'],
                         "RateCode" => is_array($xmlData['ratecode']) ? null : $xmlData['ratecode'],
-                        "RoomNo" => is_array($xmlData['roomno']) ? null : $xmlData['roomno'],
-                        "RoomType" => is_array($xmlData['roomtype']) ? null : $xmlData['roomtype'],
+                        "AreaId" => is_array($xmlData['roomno']) ? null : $xmlData['roomno'],
+                        "RequestedAreaTypeId" => is_array($xmlData['roomtype']) ? null : $xmlData['roomtype'],
                         "SourceCode" => is_array($xmlData['sourcecode']) ? null : $xmlData['sourcecode'],
-                        "RateAmount" => is_array($xmlData['rateamount']) ? null : $xmlData['rateamount'],
-                        "TravelAgentName" => is_array($xmlData['agent']) ? null : $xmlData['agent'],
+                        "GrossAmount" => is_array($xmlData['rateamount']) ? null : $xmlData['rateamount'],
+                        "TravelAgent" => is_array($xmlData['agent']) ? null : $xmlData['agent'],
                         "ChannelManager" => is_array($xmlData['channelcode']) ? null : $xmlData['channelcode'],
-                        "created_at" => Carbon::now(),
-                        "updated_at" => Carbon::now(),
+                        "CreateDate" => Carbon::now(),
+                        "LastModified" => Carbon::now(),
                     ];
                 } else {
                     // UPDATE RESERVATION
                     $existReservation->update([
-                        "GroupId" => $pmsReportEmail['GroupId'],
                         "SourceId" => $pmsReportEmail['SourceId'],
                         "AccommodationId" => $pmsReportEmail['AccommodationId'],
-                        "Property" => $pmsReportEmail['AccommodationId'],
-                        "PmsBookingId" => is_array($xmlData['resno']) ? $existReservation->ConfNumber : $xmlData['resno'],
-                        "ArrivalDate" => is_array($xmlData['arrdate']) ? $existReservation->ArrivalDate : $xmlData['arrdate'],
-                        "ArrivalTime" => is_array($xmlData['arrtime']) ? $existReservation->ArrivalTime : $xmlData['arrtime'],
-                        "DepartureDate" => is_array($xmlData['depdate']) ? $existReservation->DepartureDate : $xmlData['depdate'],
-                        "DepartureTime" => is_array($xmlData['deptime']) ? $existReservation->DepartureTime : $xmlData['deptime'],
-                        "CancellationReason" => is_array($xmlData['cancelreason']) ? $existReservation->CancellationReason : $xmlData['cancelreason'],
-                        "CancellationNo" => is_array($xmlData['cancelno']) ? $existReservation->CancellationNo : $xmlData['cancelno'],
-                        "CancellationDate" => is_array($xmlData['canceldate']) ? $existReservation->CancellationDate : $xmlData['canceldate'],
-                        "CompanyName" => is_array($xmlData['company']) ? $existReservation->CompanyName : $xmlData['company'],
-                        "BookingCreateDate" => is_array($xmlData['createdate']) ? $existReservation->InsertDate : $xmlData['createdate'],
-                        "InsertUser" => is_array($xmlData['guestname']) ? $existReservation->InsertUser : $xmlData['guestname'],
-                        "BookingLastModified" => is_array($xmlData['updatedate']) ? $existReservation->UpdateDate : $xmlData['updatedate'],
+                        "PmsBookingId" => is_array($xmlData['resno']) ? $existReservation->PmsBookingId : $xmlData['resno'],
+                        "CheckInDate" => is_array($xmlData['arrdate']) ? $existReservation->CheckInDate : new Carbon(date('d-m-Y', strtotime($xmlData['arrdate']))),
+                        "CheckInTime" => is_array($xmlData['arrtime']) ? $existReservation->CheckInTime : @$xmlData['arrtime'],
+                        "CheckOutDate" => is_array($xmlData['depdate']) ? $existReservation->CheckOutDate : new Carbon(date('d-m-Y', strtotime($xmlData['depdate']))),
+                        "CheckOutTime" => is_array($xmlData['deptime']) ? $existReservation->CheckOutTime : @$xmlData['deptime'],
+                        "CancellationComment" => is_array($xmlData['cancelreason']) ? $existReservation->CancellationComment : $xmlData['cancelreason'],
+                        "CancellationNumber" => is_array($xmlData['cancelno']) ? $existReservation->CancellationNumber : $xmlData['cancelno'],
+                        "CancelledAt" => is_array($xmlData['canceldate']) ? $existReservation->CancelledAt : $xmlData['canceldate'],
+                        "CompanyIds" => is_array($xmlData['company']) ? $existReservation->CompanyIds : $xmlData['company'],
+                        "BookingCreateDate" => is_array($xmlData['createdate']) ? $existReservation->InsertDate : new Carbon(str_replace("/", "-", $xmlData['createdate'])),
+                        "BookingLastModified" => is_array($xmlData['updatedate']) ? $existReservation->UpdateDate : new Carbon(str_replace("/", "-", $xmlData['updatedate'])),
                         "CurrencyCode" => is_array($xmlData['curreny']) ? $existReservation->CurrencyCode : $xmlData['curreny'],
-                        "ResvStatus" => is_array($xmlData['resstatus']) ? $existReservation->ResvStatus : $xmlData['resstatus'],
-                        "GuestNameID" => is_array($xmlData['profileid']) ? $existReservation->GuestNameID : $xmlData['profileid'],
-                        "LastName" => is_array($xmlData['guestname']) ? $existReservation->LastName : $xmlData['guestname'],
+                        "Status" => is_array($xmlData['resstatus']) ? $existReservation->Status : $this->bookingStatus[$xmlData['resstatus']],
+                        "GuestIds" => is_array($xmlData['profileid']) ? $existReservation->GuestIds : $xmlData['profileid'],
                         "MarketCode" => is_array($xmlData['marketcode']) ? $existReservation->MarketCode : $xmlData['marketcode'],
-                        "PaymentMethod" => is_array($xmlData['paymentmethod']) ? $existReservation->PaymentMethod : $xmlData['paymentmethod'],
                         "RateCode" => is_array($xmlData['ratecode']) ? $existReservation->RateCode : $xmlData['ratecode'],
-                        "RoomNo" => is_array($xmlData['roomno']) ? $existReservation->RoomNo : $xmlData['roomno'],
-                        "RoomType" => is_array($xmlData['roomtype']) ? $existReservation->RoomType : $xmlData['roomtype'],
+                        "AreaId" => is_array($xmlData['roomno']) ? $existReservation->AreaId : $xmlData['roomno'],
+                        "RequestedAreaTypeId" => is_array($xmlData['roomtype']) ? $existReservation->RoomType : $xmlData['roomtype'],
                         "SourceCode" => is_array($xmlData['sourcecode']) ? $existReservation->SourceCode : $xmlData['sourcecode'],
-                        "RateAmount" => is_array($xmlData['rateamount']) ? $existReservation->RateAmount : $xmlData['rateamount'],
-                        "TravelAgentName" => is_array($xmlData['agent']) ? $existReservation->TravelAgentName : $xmlData['agent'],
+                        "GrossAmount" => is_array($xmlData['rateamount']) ? $existReservation->GrossAmount : $xmlData['rateamount'],
+                        "TravelAgent" => is_array($xmlData['agent']) ? $existReservation->TravelAgentName : $xmlData['agent'],
                         "ChannelManager" => is_array($xmlData['channelcode']) ? null : $xmlData['channelcode'],
-                        "updated_at" => Carbon::now(),
+                        "LastModified" => Carbon::now(),
                     ]);
                 }
             }
             if ($reservationCreate)
-                Reservation::insert($reservationCreate);
+                Booking::insert($reservationCreate);
             return 'Success';
         } catch (\Exception $exception) {
             return $exception->getMessage();

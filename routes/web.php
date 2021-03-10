@@ -20,3 +20,4 @@ Route::get('/', function () {
 Route::get('reports', 'App\Http\Controllers\ReportsController@index');
 Route::get('profiles', 'App\Http\Controllers\ProfilesController@index');
 Route::get('bookings', 'App\Http\Controllers\BookingsController@index');
+Route::get('stays', 'App\Http\Controllers\StaysController@index');
